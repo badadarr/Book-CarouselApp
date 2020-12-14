@@ -66,16 +66,33 @@ struct ContentView_Previews: PreviewProvider {
                     
                     HStack {
                         
-                        Image(book.image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: width, height: getHeight(index: book.id))
-                        
+                        ZStack {
+                            
+                            Image(book.image)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: width, height: getHeight(index: book.id))
+                                .cornerRadius(25)
+                            // Little Shadow...
+                                .shadow(color: Color.blue.opacity(0.2), radius: 5, x: 5)
+                            
+                            // Readmore Button....
+                            
+                            CardView(card: book)
+                                .frame(width: width, height: getHeight(index: book.id))
+                        }
                         Spacer(minLength: 0)
                     }
                     // Content Shape For Drag Gesture
                     .contentShape(Rectangle())
-                    .offset(x: book.id < 3 ? CGFloat(book.id) * 30 : 60)
+                    .padding(.horizontal,20)
+                    // gesture...
+                    .offset(x: book.offset)
+                    .gesture(DragGesture().onChanged({ (value) in
+                        withAnimation{onScroll(value: value.translation.width, index: book.id)}
+                    }).onEnded({ (value) in
+                        withAnimation{onEnd(value: value.translation.width, index: book.id)}
+                    }))
                 }
             }
             Spacer(minLength: 0)
@@ -90,8 +107,62 @@ struct ContentView_Previews: PreviewProvider {
         // all other are 80 at background...
         return height - (index < 3 ? CGFloat(index) * 40 : 80)
     }
+    
+    func onScroll(value: CGFloat, index: Int) {
+        
+        if value < 0 {
+            // Left Swipe...
+            
+            if index != books.last!.id {
+                
+                books[index].offset = value
+            }
+        }
+    }
+    
+    func onEnd(value: CGFloat, index: Int) {
+        
+        if value < 0 {
+            
+            if -value > width / 2 && index != books.last!.id {
+                
+                books[index].offset = -(width + 60)
+            }
+        }
+    }
  }
  
+ struct CardView : View {
+    
+    var card : Book
+    var body: some View {
+        
+        VStack {
+            
+            // You can display all details
+            // I'm displaying only read button
+            Spacer(minLength: 0)
+            
+            HStack {
+                
+                Button(action: {}) {
+                    
+                    Text("Read Now")
+                        .font(.system(size: 14))
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(.vertical, 5)
+                        .padding(.horizontal, 10)
+                        .background(Color("purple"))
+                        .clipShape(Capsule())
+                }
+                Spacer(minLength: 0)
+            }
+            .padding()
+            .padding(.bottom, 10)
+        }
+    }
+ }
 // Carousel Model Book Data...
 
  struct Book : Identifiable {
