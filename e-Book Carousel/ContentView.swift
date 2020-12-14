@@ -36,6 +36,8 @@ struct ContentView_Previews: PreviewProvider {
        Book(id: 5, image: "p4", title: "Koala Kumal", author: "Raditya Dika", rating: 93, offset: 0),
     ]
     
+    @State var swiped = 0
+    
     var body: some View {
         
         VStack {
@@ -86,6 +88,7 @@ struct ContentView_Previews: PreviewProvider {
                     // Content Shape For Drag Gesture
                     .contentShape(Rectangle())
                     .padding(.horizontal,20)
+                    .offset(x: book.id - swiped < 3 ? CGFloat(book.id - swiped) * 30 : 60)
                     // gesture...
                     .offset(x: book.offset)
                     .gesture(DragGesture().onChanged({ (value) in
@@ -105,7 +108,10 @@ struct ContentView_Previews: PreviewProvider {
         
         // 2 card = 80
         // all other are 80 at background...
-        return height - (index < 3 ? CGFloat(index) * 40 : 80)
+        
+        // automatic height and offset adjusting...
+        
+        return height - (index - swiped < 3 ? CGFloat(index - swiped) * 40 : 80)
     }
     
     func onScroll(value: CGFloat, index: Int) {
@@ -118,6 +124,15 @@ struct ContentView_Previews: PreviewProvider {
                 books[index].offset = value
             }
         }
+        else {
+            // Right Swipe...
+            
+            // Safe Check...
+            if index > 0 {
+                
+                books[index - 1].offset = -(width + 60) + value
+            }
+        }
     }
     
     func onEnd(value: CGFloat, index: Int) {
@@ -127,6 +142,26 @@ struct ContentView_Previews: PreviewProvider {
             if -value > width / 2 && index != books.last!.id {
                 
                 books[index].offset = -(width + 60)
+                swiped += 1
+            }
+            else {
+                
+                books[index].offset = 0
+            }
+        }
+        else {
+            
+            if index > 0 {
+                
+                if value > width / 2 {
+                    
+                    books[index - 1].offset = 0
+                    swiped -= 1
+                }
+                else {
+                    
+                    books[index - 1].offset = -(width + 60)
+                }
             }
         }
     }
@@ -175,5 +210,7 @@ struct ContentView_Previews: PreviewProvider {
         var offset : CGFloat
  }
 
+ 
+ // Paging COntrol...
  
 
